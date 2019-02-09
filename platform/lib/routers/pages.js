@@ -17,8 +17,12 @@
 'use strict';
 
 const express = require('express');
-const config = require('../config');
+const config = require('@lib/config');
 const {Signale} = require('signale');
+const utils = require('@lib/utils');
+const {FilteredPage, isFilterableRoute} = require('@lib/common/filteredPage');
+const fs = require('fs');
+const path = require('path');
 
 
 // eslint-disable-next-line new-cap
@@ -144,16 +148,40 @@ if (config.environment === 'development') {
 }
 
 if (config.environment !== 'development') {
+  const STATIC_PAGES_PATH = utils.project.absolute('platform/pages');
+  const NOT_FOUND_ROUTE = '/404.html';
+
   pages.use('/', (request, response, next) => {
-    // Check if this request should be filtered
-    const activeFormat = getFilteredFormat(request);
-    if (activeFormat) {
-      // And if it should be filtered rewrite to the correct file
-      request.url = request.url.replace('.html', `.${activeFormat}.html`);
+    let requestPath = request.path;
+
+    // Match / to index.html
+    if (requestPath == '/') {
+      requestPath = '/index.html';
     }
 
-    next();
-  }, express.static('pages'));
+    // Check if the requested file exists
+    if (!fs.existsSync(path.join(STATIC_PAGES_PATH, requestPath))) {
+      requestPath = NOT_FOUND_ROUTE;
+    }
+
+    fs.readFile(path.join(STATIC_PAGES_PATH, requestPath), (error, data) => {
+      if (error) throw error;
+      response.set('Content-Type', 'text/html');
+
+      // Check if the page should be format filtered
+      const activeFormat = getFilteredFormat(request);
+      if (activeFormat && isFilterableRoute(requestPath)) {
+        try {
+          const filteredPage = new FilteredPage(activeFormat, data);
+          data = filteredPage.content;
+        } catch(e) {
+          console.info('Format filtering is not valid for requested route');
+        }
+      }
+
+      response.send(data);
+    });
+  });
 }
 
 module.exports = pages;
