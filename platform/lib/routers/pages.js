@@ -151,7 +151,7 @@ if (config.environment !== 'development') {
   const STATIC_PAGES_PATH = utils.project.absolute('platform/pages');
   const NOT_FOUND_ROUTE = '/404.html';
 
-  pages.use('/', (request, response, next) => {
+  pages.use('/', (request, response) => {
     let requestPath = request.path;
 
     // Match / to index.html
@@ -174,7 +174,7 @@ if (config.environment !== 'development') {
         try {
           const filteredPage = new FilteredPage(activeFormat, data);
           data = filteredPage.content;
-        } catch(e) {
+        } catch (e) {
           console.info('Format filtering is not valid for requested route');
         }
       }
