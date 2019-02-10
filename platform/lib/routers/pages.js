@@ -154,9 +154,9 @@ if (config.environment !== 'development') {
   pages.use('/', (request, response) => {
     let requestPath = request.path;
 
-    // Match / to index.html
-    if (requestPath == '/') {
-      requestPath = '/index.html';
+    // Match root requests to a possible index.html
+    if (requestPath.endsWith('/')) {
+      requestPath = requestPath + 'index.html';
     }
 
     // Check if the requested file exists
