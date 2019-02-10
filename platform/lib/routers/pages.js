@@ -162,6 +162,7 @@ if (config.environment !== 'development') {
     // Check if the requested file exists
     if (!fs.existsSync(utils.project.pagePath(requestPath))) {
       requestPath = NOT_FOUND_ROUTE;
+      response.status(404)
     }
 
     fs.readFile(utils.project.pagePath(requestPath), (error, data) => {
