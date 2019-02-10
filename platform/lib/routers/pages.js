@@ -16,6 +16,7 @@
 
 'use strict';
 
+const {promisify} = require('util');
 const express = require('express');
 const config = require('@lib/config');
 const {Signale} = require('signale');
@@ -23,7 +24,7 @@ const utils = require('@lib/utils');
 const {FilteredPage, isFilterableRoute} = require('@lib/common/filteredPage');
 const fs = require('fs');
 const path = require('path');
-
+const readFileAsync = promisify(fs.readFile);
 
 // eslint-disable-next-line new-cap
 const pages = express.Router();
@@ -151,7 +152,7 @@ if (config.environment !== 'development') {
   const STATIC_PAGES_PATH = utils.project.absolute('platform/pages');
   const NOT_FOUND_ROUTE = '/404.html';
 
-  pages.use('/', (request, response) => {
+  pages.use('/', async (request, response) => {
     let requestPath = request.path;
 
     // Match root requests to a possible index.html
@@ -165,23 +166,23 @@ if (config.environment !== 'development') {
       response.status(404)
     }
 
-    fs.readFile(utils.project.pagePath(requestPath), (error, data) => {
-      if (error) throw error;
-      response.set('Content-Type', 'text/html');
-
-      // Check if the page should be format filtered
-      const activeFormat = getFilteredFormat(request);
-      if (activeFormat && isFilterableRoute(requestPath)) {
-        try {
-          const filteredPage = new FilteredPage(activeFormat, data);
-          data = filteredPage.content;
-        } catch (e) {
-          console.info('Format filtering is not valid for requested route');
-        }
-      }
-
-      response.send(data);
+    let page = await readFileAsync(utils.project.pagePath(requestPath)).catch((e) => {
+      throw e;
     });
+
+    response.set('Content-Type', 'text/html');
+
+    const activeFormat = getFilteredFormat(request);
+    if (activeFormat && isFilterableRoute(requestPath)) {
+      try {
+        const filteredPage = new FilteredPage(activeFormat, page);
+        page = filteredPage.content;
+      } catch (e) {
+        console.info('Format filtering is not valid for requested route');
+      }
+    }
+
+    response.send(page);
   });
 }
 
