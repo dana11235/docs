@@ -51,5 +51,6 @@ const paths = {
 module.exports = {
   'absolute': absolute,
   'relative': relative,
+  'pagePath': pagePath,
   'paths': paths,
 };
