@@ -160,11 +160,11 @@ if (config.environment !== 'development') {
     }
 
     // Check if the requested file exists
-    if (!fs.existsSync(path.join(STATIC_PAGES_PATH, requestPath))) {
+    if (!fs.existsSync(utils.project.pagePath(requestPath))) {
       requestPath = NOT_FOUND_ROUTE;
     }
 
-    fs.readFile(path.join(STATIC_PAGES_PATH, requestPath), (error, data) => {
+    fs.readFile(utils.project.pagePath(requestPath), (error, data) => {
       if (error) throw error;
       response.set('Content-Type', 'text/html');
 

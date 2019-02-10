@@ -30,6 +30,15 @@ function relative(base, relativePath) {
 }
 
 /**
+ * Returns the file path of a statically built page
+ * @param  {String} relativePath A request path
+ * @return {String}
+ */
+function pagePath(relativePath) {
+  return path.join(paths.GROW_BUILD_DEST, relativePath);
+}
+
+/**
  * Various paths that are critic for the project and are used around the library
  * @type {Object}
  */
